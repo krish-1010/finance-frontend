@@ -8,11 +8,11 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    totalAmount: "",
-    currentAmount: "",
+    totalAmount: "", // Original Loan Amount
+    currentAmount: "", // How much is left
     interestRate: "",
     minimumPayment: "",
-    dueDate: "", // Day of month (e.g., 5)
+    dueDate: "",
   });
 
   if (!isOpen) return null;
@@ -20,10 +20,17 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
+    const payload = {
+      ...formData,
+      totalAmount: formData.totalAmount || formData.currentAmount,
+    };
+
     try {
-      await api.post("/debts", formData);
+      await api.post("/debts", payload);
       onSuccess();
       onClose();
+      // Reset Form
       setFormData({
         name: "",
         totalAmount: "",
@@ -56,7 +63,7 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }) {
             </label>
             <input
               required
-              placeholder="e.g. HDFC Credit Card"
+              placeholder="e.g. HDFC Credit Card, Friend Loan"
               className="w-full mt-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-slate-900"
               value={formData.name}
               onChange={(e) =>
@@ -77,7 +84,14 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }) {
                 className="w-full mt-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-slate-900 font-bold"
                 value={formData.currentAmount}
                 onChange={(e) =>
-                  setFormData({ ...formData, currentAmount: e.target.value })
+                  setFormData({
+                    ...formData,
+                    currentAmount: e.target.value,
+                    // Auto-fill totalAmount if it's currently empty (UX improvement)
+                    totalAmount: formData.totalAmount
+                      ? formData.totalAmount
+                      : e.target.value,
+                  })
                 }
               />
             </div>
@@ -88,7 +102,7 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }) {
               <input
                 type="number"
                 required
-                placeholder="12%"
+                placeholder="0% for Friends"
                 step="0.1"
                 className="w-full mt-1 p-2 border rounded-lg outline-none focus:ring-2 focus:ring-slate-900"
                 value={formData.interestRate}
@@ -131,9 +145,6 @@ export default function AddDebtModal({ isOpen, onClose, onSuccess }) {
               />
             </div>
           </div>
-
-          {/* Hidden field for Total Original Amount (Optional, can just mirror current for now) */}
-          <input type="hidden" value={formData.currentAmount} />
 
           <button
             type="submit"

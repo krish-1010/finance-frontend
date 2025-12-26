@@ -1,10 +1,9 @@
 import axios from "axios";
 
 const api = axios.create({
-  // baseURL: "http://localhost:5000/api", // Your Node Backend URL
-  // baseURL: "https://finance-backend-ww5g.onrender.com/api", // Your Node Backend URL
-  baseURL: "/api", // Your Node Backend URL
-  withCredentials: true, // IMPORTANT: Allows cookies (Session ID) to travel
+  // Automatically picks the right URL based on where it's running
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
 });
 
 export default api;

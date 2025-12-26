@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import api from "@/lib/api";
 import { useRouter } from "next/navigation";
+import SettingsModal from "./forms/SettingsModal";
+import { Settings } from "lucide-react";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -90,11 +92,28 @@ export default function Sidebar() {
             })}
           </nav>
 
-          {/* User Profile / Logout */}
-          <div className="p-4 border-t border-slate-800">
+          {/* User Profile / Settings / Logout */}
+          <div className="p-4 border-t border-slate-800 space-y-2">
+            {" "}
+            {/* Added space-y-2 for gap */}
+            {/* 1. The Modal Component (Invisible until triggered) */}
+            <SettingsModal
+              isOpen={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+            />
+            {/* 2. The Settings Button (You were missing this!) */}
             <button
-              onClick={handleLogout} // Attach the function here
+              onClick={() => setIsSettingsOpen(true)}
               className="flex items-center w-full px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            >
+              <Settings size={20} className="mr-3" />{" "}
+              {/* Import Settings from lucide-react */}
+              Settings
+            </button>
+            {/* 3. The Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-2 text-sm text-slate-400 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors"
             >
               <LogOut size={20} className="mr-3" />
               Sign Out
