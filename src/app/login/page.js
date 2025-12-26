@@ -21,7 +21,8 @@ export default function LoginPage() {
         <div className="mt-8 space-y-4">
           {/* This link hits your Backend API directly */}
           <Link
-            href="http://localhost:5000/api/auth/google"
+            // href="http://localhost:5000/api/auth/google"
+            href="https://finance-gps-backend.onrender.com/api/auth/google"
             className="flex items-center justify-center w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors gap-3"
           >
             <img
