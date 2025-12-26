@@ -103,7 +103,7 @@ export default function GoalsPage() {
       </div>
 
       {/* 2. FIRE CALCULATOR SECTION */}
-      <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-linear-to-br from-indigo-900 to-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
 
@@ -132,7 +132,7 @@ export default function GoalsPage() {
               {/* Progress Bar */}
               <div className="h-4 w-full bg-slate-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-orange-400 to-pink-500 transition-all duration-1000 ease-out"
+                  className="h-full bg-linear-to-r from-orange-400 to-pink-500 transition-all duration-1000 ease-out"
                   style={{
                     width: `${Math.min(
                       fireData?.metrics?.progress || 0,

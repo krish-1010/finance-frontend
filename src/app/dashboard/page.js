@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation"; // Import Router
 import api from "@/lib/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -15,7 +15,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     api
       .get("/dashboard")
       .then((res) => setData(res.data))
@@ -27,11 +27,11 @@ export default function Dashboard() {
         }
       })
       .finally(() => setLoading(false));
-  };
+  }, [router]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   // 1. Loading State
   if (loading) {
@@ -125,7 +125,7 @@ export default function Dashboard() {
             title="Spending Breakdown"
             description="Where your money went this month"
           />
-          <CardContent className="h-[300px]">
+          <CardContent className="h-75">
             {/* Fixed height is important for Recharts */}
             <SpendingPieChart />
           </CardContent>

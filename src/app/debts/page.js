@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import { AlertTriangle, TrendingDown, ShieldCheck, Zap } from "lucide-react";
@@ -13,7 +13,7 @@ export default function DebtPage() {
   const [extraPayment, setExtraPayment] = useState(0); // For simulation
 
   // Deferred async fetch to avoid calling setState synchronously inside effect
-  const fetchStrategy = async (simulateExtra = extraPayment) => {
+  const fetchStrategy = useCallback(async (simulateExtra = extraPayment) => {
     // yield to event loop so subsequent setState is not synchronous inside an effect body
     await Promise.resolve();
     setLoading(true);
@@ -25,11 +25,11 @@ export default function DebtPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [extraPayment]);
 
   useEffect(() => {
-    fetchStrategy(extraPayment);
-  }, [extraPayment]); // Re-fetch when simulation slider moves
+    fetchStrategy();
+  }, [fetchStrategy]); // Re-fetch when simulation slider moves
 
   return (
     <main className="p-4 md:p-8 space-y-6 bg-slate-50 min-h-screen">
