@@ -1,7 +1,9 @@
+"use client";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-xl border border-slate-100 text-center">
@@ -21,8 +23,7 @@ export default function LoginPage() {
         <div className="mt-8 space-y-4">
           {/* This link hits your Backend API directly */}
           <Link
-            // href="http://localhost:5000/api/auth/google"
-            href="https://finance-backend-ww5g.onrender.com/api/auth/google"
+            href={`${API_URL}/auth/google`}
             className="flex items-center justify-center w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm bg-white text-slate-700 font-medium hover:bg-slate-50 transition-colors gap-3"
           >
             <img
