@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // Import Router
@@ -7,21 +7,23 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
 import { Wallet, TrendingUp, AlertTriangle, Loader2 } from "lucide-react"; // Added Loader2
 import AddTransactionModal from "@/components/forms/AddTransactionModal";
+import SpendingPieChart from "@/components/charts/SpendingPieChart";
 
 export default function Dashboard() {
   const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const fetchData = () => {
-    api.get("/dashboard")
+    api
+      .get("/dashboard")
       .then((res) => setData(res.data))
       .catch((err) => {
         console.error("Auth Error:", err);
         // If 401, kick them to login
         if (err.response && err.response.status === 401) {
-          router.push("/login"); 
+          router.push("/login");
         }
       })
       .finally(() => setLoading(false));
@@ -45,8 +47,11 @@ export default function Dashboard() {
     return (
       <div className="p-10 text-center">
         <h2 className="text-xl font-bold">Unable to load data.</h2>
-        <button onClick={() => router.push('/login')} className="text-blue-600 underline">
-            Please Log In
+        <button
+          onClick={() => router.push("/login")}
+          className="text-blue-600 underline"
+        >
+          Please Log In
         </button>
       </div>
     );
@@ -82,7 +87,9 @@ export default function Dashboard() {
           <CardHeader title="Monthly Spending" className="pb-2" />
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(data.summary.fixedExpenses + data.summary.variableExpenses)}
+              {formatCurrency(
+                data.summary.fixedExpenses + data.summary.variableExpenses
+              )}
             </div>
             <p className="text-xs text-slate-500">
               Fixed: {formatCurrency(data.summary.fixedExpenses)}
@@ -114,16 +121,22 @@ export default function Dashboard() {
       {/* Chart Placeholder */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
-          <CardHeader title="Spending Trends" />
-          <CardContent className="h-72 flex items-center justify-center bg-slate-100 rounded-md">
-            <p className="text-slate-400">Chart Component Goes Here</p>
+          <CardHeader
+            title="Spending Breakdown"
+            description="Where your money went this month"
+          />
+          <CardContent className="h-[300px]">
+            {/* Fixed height is important for Recharts */}
+            <SpendingPieChart />
           </CardContent>
         </Card>
 
         <Card className="col-span-3">
           <CardHeader title="Recent Activity" description="Last transactions" />
           <CardContent>
-             <div className="text-sm text-slate-500 text-center py-4">Transaction List Widget Coming Soon</div>
+            <div className="text-sm text-slate-500 text-center py-4">
+              Transaction List Widget Coming Soon
+            </div>
           </CardContent>
         </Card>
       </div>

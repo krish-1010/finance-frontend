@@ -9,6 +9,7 @@ import {
   TrendingUp,
   LogOut,
   Menu,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -19,7 +20,8 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions", icon: Wallet },
   { name: "Debt Manager", href: "/debts", icon: TrendingUp },
-  { name: "Goals & FIRE", href: "/goals", icon: PiggyBank },
+  { name: "Wealth & FIRE", href: "/goals", icon: PiggyBank },
+  { name: "Advisor", href: "/advisor", icon: GraduationCap }, // Added this
 ];
 
 export default function Sidebar() {
