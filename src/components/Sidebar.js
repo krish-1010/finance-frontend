@@ -30,6 +30,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false); // Mobile toggle state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false); // Settings modal state
 
   // LOGOUT FUNCTION
   const handleLogout = async () => {
