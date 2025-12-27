@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
-import { AlertTriangle, TrendingDown, ShieldCheck, Zap } from "lucide-react";
+import { AlertTriangle, TrendingDown, ShieldCheck, Zap, Trash2 } from "lucide-react";
 import AddDebtModal from "@/components/forms/AddDebtModal";
 
 export default function DebtPage() {
@@ -12,20 +12,29 @@ export default function DebtPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [extraPayment, setExtraPayment] = useState(0); // For simulation
 
+  const handleDelete = async (id) => {
+    if (!confirm("Delete this debt?")) return;
+    await api.delete(`/debts/${id}`);
+    fetchStrategy(); // Refresh the list
+  };
+
   // Deferred async fetch to avoid calling setState synchronously inside effect
-  const fetchStrategy = useCallback(async (simulateExtra = extraPayment) => {
-    // yield to event loop so subsequent setState is not synchronous inside an effect body
-    await Promise.resolve();
-    setLoading(true);
-    try {
-      const res = await api.get(`/debts/strategy?extra=${simulateExtra}`);
-      setStrategy(res.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [extraPayment]);
+  const fetchStrategy = useCallback(
+    async (simulateExtra = extraPayment) => {
+      // yield to event loop so subsequent setState is not synchronous inside an effect body
+      await Promise.resolve();
+      setLoading(true);
+      try {
+        const res = await api.get(`/debts/strategy?extra=${simulateExtra}`);
+        setStrategy(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [extraPayment]
+  );
 
   useEffect(() => {
     fetchStrategy();
@@ -106,7 +115,7 @@ export default function DebtPage() {
           ) : (
             strategy?.strategyReport?.map((debt, index) => (
               <div
-                key={index}
+                key={debt._id}
                 className={`relative p-6 rounded-xl border-2 transition-all ${
                   index === 0
                     ? "bg-white border-emerald-500 shadow-lg scale-[1.01]"
@@ -131,11 +140,20 @@ export default function DebtPage() {
                       </span>
                     </p>
                   </div>
-                  <div className="text-right">
+                  {/* ACTION BUTTONS */}
+                  <div className="flex flex-col items-end gap-2">
                     <div className="text-xl font-bold text-red-600">
                       {debt.interest}% Interest
                     </div>
-                    <p className="text-xs text-slate-400">APR</p>
+
+                    {/* THE DELETE BUTTON */}
+                    <button
+                      onClick={() => handleDelete(debt._id)}
+                      className="text-slate-400 hover:text-red-500 transition-colors"
+                      title="Remove Debt"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </div>
 
