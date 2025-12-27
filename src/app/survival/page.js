@@ -47,9 +47,7 @@ export default function SurvivalPage() {
       <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
         <Zap className="text-amber-500" /> Survival Calculator
       </h1>
-      <p className="text-slate-500">
-        Amortization & True Cost of Living (Old App Style)
-      </p>
+      <p className="text-slate-500">Amortization & True Cost of Living</p>
 
       {/* 1. The Head-Up Display (HUD) */}
       <div className="grid md:grid-cols-3 gap-4">

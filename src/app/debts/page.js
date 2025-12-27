@@ -3,7 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
-import { AlertTriangle, TrendingDown, ShieldCheck, Zap, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  TrendingDown,
+  ShieldCheck,
+  Zap,
+  Trash2,
+  CheckCircle,
+  History,
+} from "lucide-react";
 import AddDebtModal from "@/components/forms/AddDebtModal";
 
 export default function DebtPage() {
@@ -16,6 +24,18 @@ export default function DebtPage() {
     if (!confirm("Delete this debt?")) return;
     await api.delete(`/debts/${id}`);
     fetchStrategy(); // Refresh the list
+  };
+
+  // 1. Add Handle Payoff Function
+  const handlePayoff = async (id) => {
+    if (!confirm("Mark this debt as fully PAID OFF? (Congratulations!)"))
+      return;
+    try {
+      await api.patch(`/debts/${id}/status`);
+      fetchStrategy(); // Refresh list (Item will disappear from Active list)
+    } catch (err) {
+      alert("Failed to update");
+    }
   };
 
   // Deferred async fetch to avoid calling setState synchronously inside effect
@@ -140,20 +160,32 @@ export default function DebtPage() {
                       </span>
                     </p>
                   </div>
-                  {/* ACTION BUTTONS */}
+
+                  {/* ACTION BUTTONS (Updated) */}
                   <div className="flex flex-col items-end gap-2">
                     <div className="text-xl font-bold text-red-600">
                       {debt.interest}% Interest
                     </div>
 
-                    {/* THE DELETE BUTTON */}
-                    <button
-                      onClick={() => handleDelete(debt._id)}
-                      className="text-slate-400 hover:text-red-500 transition-colors"
-                      title="Remove Debt"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex gap-2">
+                      {/* PAID OFF BUTTON (The Victory Button) */}
+                      <button
+                        onClick={() => handlePayoff(debt._id)}
+                        className="p-2 bg-emerald-100 text-emerald-600 rounded-full hover:bg-emerald-200 transition-colors"
+                        title="Mark as Paid Off"
+                      >
+                        <CheckCircle size={18} />
+                      </button>
+
+                      {/* DELETE BUTTON (The Mistake Button) */}
+                      <button
+                        onClick={() => handleDelete(debt._id)}
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                        title="Delete (Mistake)"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
