@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -9,9 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 
 // Modern Color Palette for Categories
 const COLORS = [
@@ -24,52 +21,37 @@ const COLORS = [
   "#64748b",
 ];
 
-export default function SpendingPieChart() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api
-      .get("/analytics")
-      .then((res) => {
-        // Transform API data ({_id: "Food", total: 500}) -> Recharts format
-        const formatted = res.data.map((item) => ({
-          name: item._id,
-          value: item.total,
-        }));
-        setData(formatted);
-      })
-      .catch((err) => console.error(err))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading)
-    return (
-      <div className="h-full flex items-center justify-center">
-        <Loader2 className="animate-spin text-slate-300" />
-      </div>
-    );
-
-  if (data.length === 0)
+export default function SpendingPieChart({ data = [] }) {
+  // Handle Empty State
+  if (!data || data.length === 0) {
     return (
       <div className="h-full flex items-center justify-center text-slate-400 text-sm">
         No expense data yet
       </div>
     );
+  }
+
+  // Normalize data: Handle both "total" (DB) and "value" (Recharts) keys
+  // This prevents the chart from breaking if the API format varies slightly
+  const chartData = data.map((item) => ({
+    name: item.name || item._id || "Unknown",
+    value: item.value || item.total || 0,
+  }));
 
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
-          data={data}
+          data={chartData}
           cx="50%"
           cy="50%"
           innerRadius={60} // Donut style
           outerRadius={80}
           paddingAngle={5}
           dataKey="value"
+          nameKey="name"
         >
-          {data.map((entry, index) => (
+          {chartData.map((entry, index) => (
             <Cell
               key={`cell-${index}`}
               fill={COLORS[index % COLORS.length]}
