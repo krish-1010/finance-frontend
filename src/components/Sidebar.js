@@ -10,6 +10,8 @@ import {
   LogOut,
   Menu,
   GraduationCap,
+  Calculator,
+  Map,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -23,7 +25,9 @@ const navItems = [
   { name: "Transactions", href: "/transactions", icon: Wallet },
   { name: "Debt Manager", href: "/debts", icon: TrendingUp },
   { name: "Wealth & FIRE", href: "/goals", icon: PiggyBank },
-  { name: "Advisor", href: "/advisor", icon: GraduationCap }, // Added this
+  { name: "Advisor", href: "/advisor", icon: GraduationCap },
+  { name: "Allocator", href: "/planner", icon: Map },
+  { name: "Survival Calc", href: "/survival", icon: Calculator },
 ];
 
 export default function Sidebar() {
