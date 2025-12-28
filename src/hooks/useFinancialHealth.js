@@ -15,27 +15,29 @@ export function useFinancialHealth() {
     const fetchData = async () => {
       try {
         // Parallel Fetch: Get EVERYTHING
-        const [assetsRes, debtsRes, txRes] = await Promise.all([
-          api.get("/networth"), // Get Assets
-          api.get("/debts/strategy"), // Get Debts
-          api.get("/transactions"), // Get History
+        const [debtsRes, txRes] = await Promise.all([
+          api.get("/debts/strategy"),
+          api.get("/transactions?limit=1000"), // Try to get more history
         ]);
-        const assets = assetsRes.data.breakdown.assets;
-        const debts = debtsRes.data.strategyReport;
-        const transactions = txRes.data;
+        const debts = debtsRes.data.strategyReport || [];
+        const transactions = txRes.data || [];
 
         // 1. LIQUID CASH (Your "Wallet")
-        const liquidCash = assets
-          .filter((a) => a.isLiquid)
-          .reduce((sum, a) => sum + a.value, 0);
+        // --- 1. CALCULATE BALANCE FROM HISTORY (The Fix) ---
+        // Sum of (Income - Expenses)
+        let calculatedBalance = 0;
+        transactions.forEach((tx) => {
+          if (tx.type === "INCOME") calculatedBalance += tx.amount;
+          if (tx.type === "EXPENSE") calculatedBalance -= tx.amount;
+          if (tx.type === "DEBT_PAYMENT") calculatedBalance -= tx.amount;
+        });
 
-        // 2. NET WORTH
+        // --- 2. NET WORTH ---
+        // Balance - Debt
         const totalDebt = debts.reduce((sum, d) => sum + d.remaining, 0);
-        const netWorth =
-          assets.reduce((sum, a) => sum + a.value, 0) - totalDebt;
+        const netWorth = calculatedBalance - totalDebt; // Simplified: Cash - Debt
 
-        // 3. TRUE BURN RATE (The "Survival Logic")
-        // Logic: Sum of all expenses in the last 30 days
+        // --- 3. BURN RATE (Last 30 Days) ---
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -44,45 +46,25 @@ export function useFinancialHealth() {
         );
 
         const monthlyBurn =
-          recentExpenses.reduce((sum, t) => sum + t.amount, 0) || 1; // Avoid divide by zero
+          recentExpenses.reduce((sum, t) => sum + t.amount, 0) || 0;
 
-        // 4. METRICS
+        // --- 4. METRICS ---
         const dailyBurn = (monthlyBurn / 30).toFixed(0);
-        const runway = (liquidCash / monthlyBurn).toFixed(1);
-        // const assets = assetsRes.data.breakdown.assets;
-        // const debts = debtsRes.data.strategyReport;
-        // const transactions = txRes.data;
 
-        // // 1. Calculate Wallet Balance (Liquid Assets Only)
-        // // In MyFinStack, this was manual. Here, it's auto-calculated from "Liquid" assets.
-        // const liquidCash = assets
-        //   .filter((a) => a.isLiquid)
-        //   .reduce((sum, a) => sum + a.value, 0);
-
-        // // 2. Calculate Net Worth (MyFinStack Logic)
-        // // Total Assets - Total Debts
-        // const totalAssets = assets.reduce((sum, a) => sum + a.value, 0);
-        // const totalDebt = debts.reduce((sum, d) => sum + d.remaining, 0);
-        // const netWorth = totalAssets - totalDebt;
-
-        // // 3. Calculate "True Monthly Burn" (MyFinStack Logic)
-        // // We average the last 3 months of expenses
-        // const expenses = transactions.filter((t) => t.type === "EXPENSE");
-        // const totalExpense = expenses.reduce((sum, t) => sum + t.amount, 0);
-        // // Rough estimate: Total Spent / (Unique Months found in data or default 1)
-        // // For V1, let's just use Total Spent / 1 (Current Month) or hardcode logic
-        // const monthlyBurn = totalExpense || 1;
-
-        // // 4. Calculate Runway (The "Scary Number")
-        // // Liquid Cash / Monthly Burn
-        // const runway = (liquidCash / monthlyBurn).toFixed(1);
+        // Safety check for runway (divide by zero)
+        const runway =
+          monthlyBurn > 0
+            ? (calculatedBalance / monthlyBurn).toFixed(1)
+            : calculatedBalance > 0
+            ? "∞"
+            : "0.0";
 
         setMetrics({
-          walletBalance: liquidCash,
+          walletBalance: calculatedBalance,
           netWorth,
           monthlyBurn,
           dailyBurn,
-          runway: isFinite(runway) ? runway : "∞",
+          runway,
           loading: false,
         });
       } catch (err) {

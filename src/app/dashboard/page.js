@@ -18,7 +18,7 @@ import {
 // Components
 import AddTransactionModal from "@/components/forms/AddTransactionModal";
 import ProcessBillsModal from "@/components/forms/ProcessBillsModal";
-
+import AddBillModal from "@/components/forms/AddBillModal";
 // Charts
 import SpendingPieChart from "@/components/charts/SpendingPieChart";
 import BurnRateChart from "@/components/charts/BurnRateChart";
@@ -29,14 +29,14 @@ export default function Dashboard() {
 
   // 1. Local Dashboard Data
   const [data, setData] = useState(null);
-  const [goals, setGoals] = useState([]); 
+  const [goals, setGoals] = useState([]);
   const [analytics, setAnalytics] = useState(null); // [NEW] Store Real Chart Data
   const [loading, setLoading] = useState(true);
 
   // 2. Modals State
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isBillsModalOpen, setIsBillsModalOpen] = useState(false);
-
+  const [isManageBillsModalOpen, setIsManageBillsModalOpen] = useState(false);
   // 3. The "Brain" Metrics
   const metrics = useFinancialHealth();
 
@@ -98,6 +98,12 @@ export default function Dashboard() {
             className="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center justify-center gap-2 transition-all"
           >
             <Wallet size={16} /> Pay Bills
+          </button>
+          <button
+            onClick={() => setIsManageBillsModalOpen(true)}
+            className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center justify-center gap-2 transition-all"
+          >
+            <Wallet size={16} /> Manage Bills
           </button>
           <button
             onClick={() => setIsTransactionModalOpen(true)}
@@ -325,6 +331,12 @@ export default function Dashboard() {
       <ProcessBillsModal
         isOpen={isBillsModalOpen}
         onClose={() => setIsBillsModalOpen(false)}
+      />
+
+      <AddBillModal
+        isOpen={isManageBillsModalOpen}
+        onClose={() => setIsManageBillsModalOpen(false)}
+        onSuccess={fetchData} // Refresh data after adding a bill
       />
     </main>
   );
