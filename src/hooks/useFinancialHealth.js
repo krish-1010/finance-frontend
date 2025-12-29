@@ -14,17 +14,20 @@ export function useFinancialHealth() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Parallel Fetch: Get EVERYTHING
         const [debtsRes, txRes] = await Promise.all([
           api.get("/debts/strategy"),
-          api.get("/transactions?limit=1000"), // Try to get more history
+          api.get("/transactions?limit=1000"),
         ]);
-        const debts = debtsRes.data.strategyReport || [];
-        const transactions = txRes.data || [];
 
-        // 1. LIQUID CASH (Your "Wallet")
-        // --- 1. CALCULATE BALANCE FROM HISTORY (The Fix) ---
-        // Sum of (Income - Expenses)
+        const debts = debtsRes.data.strategyReport || [];
+
+        // --- THE FIX IS HERE ---
+        // Handle both simple array AND new paginated response { data: [], meta: {} }
+        const rawTx = txRes.data;
+        const transactions = Array.isArray(rawTx) ? rawTx : rawTx.data || [];
+        // -----------------------
+
+        // 1. LIQUID CASH
         let calculatedBalance = 0;
         transactions.forEach((tx) => {
           if (tx.type === "INCOME") calculatedBalance += tx.amount;
@@ -32,12 +35,11 @@ export function useFinancialHealth() {
           if (tx.type === "DEBT_PAYMENT") calculatedBalance -= tx.amount;
         });
 
-        // --- 2. NET WORTH ---
-        // Balance - Debt
+        // 2. NET WORTH
         const totalDebt = debts.reduce((sum, d) => sum + d.remaining, 0);
-        const netWorth = calculatedBalance - totalDebt; // Simplified: Cash - Debt
+        const netWorth = calculatedBalance - totalDebt;
 
-        // --- 3. BURN RATE (Last 30 Days) ---
+        // 3. BURN RATE (Last 30 Days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -48,10 +50,8 @@ export function useFinancialHealth() {
         const monthlyBurn =
           recentExpenses.reduce((sum, t) => sum + t.amount, 0) || 0;
 
-        // --- 4. METRICS ---
+        // 4. METRICS
         const dailyBurn = (monthlyBurn / 30).toFixed(0);
-
-        // Safety check for runway (divide by zero)
         const runway =
           monthlyBurn > 0
             ? (calculatedBalance / monthlyBurn).toFixed(1)
@@ -69,6 +69,7 @@ export function useFinancialHealth() {
         });
       } catch (err) {
         console.error("Failed to calculate health", err);
+        setMetrics((prev) => ({ ...prev, loading: false })); // Stop loading on error
       }
     };
 

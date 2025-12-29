@@ -136,7 +136,11 @@ export default function Dashboard() {
           <CardHeader title="Liquid Cash" className="pb-2" />
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">
-              {formatCurrency(data.summary.balance)}
+              {!data ? (
+                <span className="text-slate-400 text-sm">Loading...</span>
+              ) : (
+                formatCurrency(data.summary.balance)
+              )}
             </div>
             <p className="text-xs text-slate-500">Available in Wallet</p>
           </CardContent>
@@ -200,7 +204,7 @@ export default function Dashboard() {
           </h3>
           <div className="w-full h-48">
             {/* [FIX] Use real burnRateData from analytics */}
-            <BurnRateChart data={burnRateData} />
+            <BurnRateChart data={data?.history || []} />
           </div>
         </div>
       </div>
