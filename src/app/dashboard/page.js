@@ -14,11 +14,12 @@ import {
   ArrowRight,
   Target,
 } from "lucide-react";
-
+import Link from "next/link";
 // Components
 import AddTransactionModal from "@/components/forms/AddTransactionModal";
 import ProcessBillsModal from "@/components/forms/ProcessBillsModal";
 import AddBillModal from "@/components/forms/AddBillModal";
+import ManageGoalsModal from "@/components/forms/ManageGoalsModal";
 // Charts
 import SpendingPieChart from "@/components/charts/SpendingPieChart";
 import BurnRateChart from "@/components/charts/BurnRateChart";
@@ -37,6 +38,8 @@ export default function Dashboard() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const [isBillsModalOpen, setIsBillsModalOpen] = useState(false);
   const [isManageBillsModalOpen, setIsManageBillsModalOpen] = useState(false);
+  // Rename the state variable for clarity (optional, but recommended)
+  const [isManageGoalsModalOpen, setIsManageGoalsModalOpen] = useState(false);
   // 3. The "Brain" Metrics
   const metrics = useFinancialHealth();
 
@@ -66,6 +69,12 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Filter Goals for Dashboard Display
+  const activeGoals = goals
+    .filter((g) => g.status === "ACTIVE")
+    .sort((a, b) => b.targetAmount - a.targetAmount) // Big goals first? Or create date?
+    .slice(0, 5); // Take only top 5
 
   if (loading) {
     return (
@@ -104,6 +113,12 @@ export default function Dashboard() {
             className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm flex items-center justify-center gap-2 transition-all"
           >
             <Wallet size={16} /> Manage Bills
+          </button>
+          <button
+            onClick={() => setIsManageGoalsModalOpen(true)} // Updated function name
+            className="text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-medium hover:bg-indigo-100 transition"
+          >
+            Manage Goals
           </button>
           <button
             onClick={() => setIsTransactionModalOpen(true)}
@@ -218,19 +233,27 @@ export default function Dashboard() {
       </div>
 
       {/* --- SECTION 5: SINKING FUNDS --- */}
-      {goals.length > 0 && (
-        <Card>
-          <CardHeader
-            title="Sinking Funds (Goals)"
-            description="Progress towards big future bills"
-          />
-          <CardContent>
+      <Card>
+        <CardHeader
+          title="Priority Goals"
+          description="Your top active saving targets"
+          action={
+            <Link
+              href="/goals"
+              className="text-xs text-indigo-600 hover:underline"
+            >
+              View All / History
+            </Link>
+          }
+        />
+        <CardContent>
+          {activeGoals.length > 0 ? (
             <div className="space-y-4">
-              {goals.map((goal) => {
+              {activeGoals.map((goal) => {
                 const percent = Math.min(
                   (goal.savedAmount / goal.targetAmount) * 100,
                   100
-                );
+                ).toFixed(0);
                 return (
                   <div key={goal._id}>
                     <div className="flex justify-between text-sm mb-1">
@@ -238,24 +261,38 @@ export default function Dashboard() {
                         <Target size={14} className="text-indigo-500" />
                         {goal.title}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-slate-500 text-xs">
                         {formatCurrency(goal.savedAmount)} /{" "}
                         {formatCurrency(goal.targetAmount)}
                       </span>
                     </div>
+                    {/* The Visual Progress Bar */}
                     <div className="w-full bg-slate-100 rounded-full h-2.5">
                       <div
-                        className="bg-indigo-600 h-2.5 rounded-full transition-all"
+                        className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500"
                         style={{ width: `${percent}%` }}
                       ></div>
                     </div>
+                    {/* Optional: Show date if close */}
+                    {goal.targetDate && (
+                      <p className="text-[10px] text-slate-400 mt-1 text-right">
+                        Target: {new Date(goal.targetDate).toLocaleDateString()}
+                      </p>
+                    )}
                   </div>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="text-center py-4 text-slate-500 text-sm">
+              No active goals.{" "}
+              <Link href="/goals" className="text-indigo-600">
+                Create one?
+              </Link>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* --- SECTION 6: BREAKDOWN & ACTIVITY --- */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -337,6 +374,11 @@ export default function Dashboard() {
         isOpen={isManageBillsModalOpen}
         onClose={() => setIsManageBillsModalOpen(false)}
         onSuccess={fetchData} // Refresh data after adding a bill
+      />
+
+      <ManageGoalsModal
+        isOpen={isManageGoalsModalOpen}
+        onClose={() => setIsManageGoalsModalOpen(false)}
       />
     </main>
   );

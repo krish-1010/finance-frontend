@@ -1,241 +1,132 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
-import { Target, TrendingUp, Landmark, Flame } from "lucide-react";
-import AddAssetModal from "@/components/forms/AddAssetModal";
+import { Target, Pause, Play, CheckCircle2, Plus, History } from "lucide-react";
+import ManageGoalsModal from "@/components/forms/ManageGoalsModal"; // Reuse your modal for creating
 
 export default function GoalsPage() {
-  const [fireData, setFireData] = useState(null);
-  const [netWorthData, setNetWorthData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [goals, setGoals] = useState([]);
+  const [view, setView] = useState("ACTIVE"); // ACTIVE, PAUSED, COMPLETED
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Helper to fetch data safely
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      // Parallel Fetch for speed
-      const [fireRes, netWorthRes] = await Promise.all([
-        api.get("/fire"),
-        api.get("/networth"),
-      ]);
-      setFireData(fireRes.data);
-      setNetWorthData(netWorthRes.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const fetchGoals = async () => {
+    const res = await api.get("/goals");
+    setGoals(res.data);
   };
 
   useEffect(() => {
-    loadData();
+    let mounted = true;
+    const load = async () => {
+      const res = await api.get("/goals");
+      if (mounted) setGoals(res.data);
+    };
+    load();
+    return () => { mounted = false; };
   }, []);
 
+  const handleToggleStatus = async (id) => {
+    await api.put(`/goals/${id}/status`);
+    fetchGoals();
+  };
+
+  // Filter goals based on current view tab
+  const displayedGoals = goals.filter((g) => g.status === view);
+
   return (
-    <main className="p-4 md:p-8 space-y-8 bg-slate-50 min-h-screen">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
+      
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Wealth & FIRE
-          </h1>
-          <p className="text-slate-500">Your path to financial freedom.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Savings Goals</h1>
+          <p className="text-slate-500">Track your sinking funds and big purchases.</p>
         </div>
-        <button
+        <button 
           onClick={() => setIsModalOpen(true)}
-          className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold shadow-md hover:bg-emerald-700"
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold flex gap-2 items-center hover:bg-indigo-700"
         >
-          + Add Asset
+          <Plus size={18} /> New Goal
         </button>
       </div>
 
-      {/* 1. NET WORTH SECTION */}
-      <div className="grid gap-4 md:grid-cols-3">
-        {/* Total Assets */}
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
-              <TrendingUp size={20} />
-            </div>
-            <h3 className="text-sm font-bold text-slate-500 uppercase">
-              Total Assets
-            </h3>
-          </div>
-          <div className="text-2xl font-bold text-slate-900">
-            {loading ? "..." : formatCurrency(netWorthData?.totalAssets || 0)}
-          </div>
-        </div>
-
-        {/* Total Debt (Pulled from Net Worth API) */}
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 bg-red-100 text-red-600 rounded-lg">
-              <Landmark size={20} />
-            </div>
-            <h3 className="text-sm font-bold text-slate-500 uppercase">
-              Total Liabilities
-            </h3>
-          </div>
-          <div className="text-2xl font-bold text-red-600">
-            {loading
-              ? "..."
-              : `-${formatCurrency(netWorthData?.totalDebt || 0)}`}
-          </div>
-        </div>
-
-        {/* Real Net Worth */}
-        <div className="bg-slate-900 p-6 rounded-xl text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-2 bg-slate-700 text-yellow-400 rounded-lg">
-              <Target size={20} />
-            </div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase">
-              Real Net Worth
-            </h3>
-          </div>
-          <div className="text-3xl font-bold">
-            {loading ? "..." : formatCurrency(netWorthData?.netWorth || 0)}
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="flex gap-4 border-b">
+        {["ACTIVE", "PAUSED", "COMPLETED"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setView(tab)}
+            className={`pb-2 text-sm font-bold ${
+              view === tab 
+              ? "text-indigo-600 border-b-2 border-indigo-600" 
+              : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
-      {/* 2. FIRE CALCULATOR SECTION */}
-      <div className="bg-linear-to-br from-indigo-900 to-slate-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
-        {/* Background Decoration */}
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20"></div>
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-orange-500 rounded-full shadow-lg shadow-orange-500/20">
-              <Flame size={24} className="text-white" fill="white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">F.I.R.E Progress</h2>
-              <p className="text-indigo-200 text-sm">
-                Financial Independence, Retire Early
-              </p>
-            </div>
+      {/* Grid */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {displayedGoals.length === 0 ? (
+          <div className="col-span-2 text-center py-12 text-slate-400">
+            No {view.toLowerCase()} goals found.
           </div>
-
-          <div className="grid md:grid-cols-2 gap-12">
-            <div>
-              <div className="flex justify-between items-end mb-2">
-                <span className="text-3xl font-bold">
-                  {fireData?.metrics?.progress || 0}%
-                </span>
-                <span className="text-sm text-indigo-300">of Freedom Goal</span>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="h-4 w-full bg-slate-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-linear-to-r from-orange-400 to-pink-500 transition-all duration-1000 ease-out"
-                  style={{
-                    width: `${Math.min(
-                      fireData?.metrics?.progress || 0,
-                      100
-                    )}%`,
-                  }}
-                ></div>
-              </div>
-
-              <div className="mt-4 flex justify-between text-sm">
-                <div>
-                  <p className="text-slate-400">Current Saved</p>
-                  <p className="font-bold text-lg">
-                    {formatCurrency(fireData?.metrics?.currentNetWorth || 0)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-slate-400">Target (25x Expense)</p>
-                  <p className="font-bold text-lg text-emerald-400">
-                    {formatCurrency(fireData?.metrics?.fireTarget || 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 p-6 rounded-xl backdrop-blur-sm border border-white/10">
-              <h3 className="font-bold mb-4 text-indigo-200">
-                The Math (Why this number?)
-              </h3>
-              <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex justify-between">
-                  <span>Avg Monthly Expense:</span>
-                  <span className="font-bold text-white">
-                    {formatCurrency(
-                      fireData?.metrics?.averageMonthlySpend || 0
+        ) : (
+          displayedGoals.map((goal) => {
+            const percent = Math.min((goal.savedAmount / goal.targetAmount) * 100, 100).toFixed(0);
+            return (
+              <div key={goal._id} className="bg-white p-5 rounded-xl border shadow-sm relative overflow-hidden">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-bold text-lg text-slate-800">{goal.title}</h3>
+                    <p className="text-sm text-slate-500">
+                      {formatCurrency(goal.savedAmount)} / {formatCurrency(goal.targetAmount)}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {/* Status Toggle Button */}
+                    {goal.status !== "COMPLETED" && (
+                      <button 
+                        onClick={() => handleToggleStatus(goal._id)}
+                        className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-600"
+                        title={goal.status === "ACTIVE" ? "Pause Goal" : "Resume Goal"}
+                      >
+                        {goal.status === "ACTIVE" ? <Pause size={16} /> : <Play size={16} />}
+                      </button>
                     )}
-                  </span>
-                </li>
-                <li className="flex justify-between border-b border-white/10 pb-3">
-                  <span>Annual Expense:</span>
-                  <span className="font-bold text-white">
-                    {formatCurrency(
-                      (fireData?.metrics?.averageMonthlySpend || 0) * 12
-                    )}
-                  </span>
-                </li>
-                <li className="pt-1 text-center text-xs text-orange-300 font-medium">
-                  We multiply your annual expense by 25. Once you save this
-                  amount, the interest alone (4%) covers your life expenses
-                  forever.
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. ASSET LIST */}
-      <div>
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Your Assets</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {netWorthData?.breakdown?.assets?.map((asset) => (
-            <div
-              key={asset._id}
-              className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-bold text-slate-800">{asset.name}</h4>
-                  <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-full uppercase font-bold tracking-wider">
-                    {asset.type}
-                  </span>
+                    {/* Completed Icon */}
+                    {goal.status === "COMPLETED" && <CheckCircle2 className="text-green-500" size={24} />}
+                  </div>
                 </div>
-                {asset.isLiquid && (
-                  <div
-                    title="Liquid (Emergency Safe)"
-                    className="w-2 h-2 rounded-full bg-emerald-500"
+
+                {/* Progress Bar */}
+                <div className="w-full bg-slate-100 rounded-full h-3 mb-2">
+                  <div 
+                    className={`h-3 rounded-full transition-all ${
+                      goal.status === "COMPLETED" ? "bg-green-500" 
+                      : goal.status === "PAUSED" ? "bg-amber-400" 
+                      : "bg-indigo-600"
+                    }`}
+                    style={{ width: `${percent}%` }}
                   ></div>
-                )}
+                </div>
+                
+                <div className="flex justify-between text-xs text-slate-400">
+                  <span>{percent}% Funded</span>
+                  {goal.deadline && <span>Due: {new Date(goal.deadline).toLocaleDateString()}</span>}
+                </div>
               </div>
-              <div className="text-xl font-bold text-slate-900">
-                {formatCurrency(asset.value)}
-              </div>
-            </div>
-          ))}
-
-          {/* Empty State */}
-          {!loading && netWorthData?.breakdown?.assets?.length === 0 && (
-            <div className="col-span-full p-8 text-center bg-slate-100 rounded-xl border border-dashed border-slate-300">
-              <p className="text-slate-500">No assets added yet.</p>
-              <p className="text-sm text-slate-400">
-                Add Savings, Gold, or Investments to see your Net Worth.
-              </p>
-            </div>
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
 
-      <AddAssetModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSuccess={loadData}
+      <ManageGoalsModal 
+        isOpen={isModalOpen} 
+        onClose={() => { setIsModalOpen(false); fetchGoals(); }} 
       />
-    </main>
+    </div>
   );
 }

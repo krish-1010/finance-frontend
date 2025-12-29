@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Calculator,
   Map,
+  Goal
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -24,7 +25,8 @@ const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Transactions", href: "/transactions", icon: Wallet },
   { name: "Debt Manager", href: "/debts", icon: TrendingUp },
-  { name: "Wealth & FIRE", href: "/goals", icon: PiggyBank },
+  { name: "Goals", href: "/goals", icon: Goal },
+  { name: "Wealth & FIRE", href: "/wealth", icon: PiggyBank },
   { name: "Advisor", href: "/advisor", icon: GraduationCap },
   { name: "Allocator", href: "/planner", icon: Map },
   { name: "Survival Calc", href: "/survival", icon: Calculator },
